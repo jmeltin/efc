@@ -60,7 +60,7 @@ class Body extends Component
 	{
 		owner.get(Gravity).clear();
 		owner.get(Sprite).y._ += overlapY;
-		owner.get(Sprite).x._ += overlapX + FMath.toRadians(rotation);
+		owner.get(Sprite).x._ += overlapX;
 		owner.get(Sprite).rotation.animateTo(rotation, 0.05);
 		if(fnLand != null)
 			fnLand();
@@ -70,9 +70,8 @@ class Body extends Component
 	{
 		if(_type != Dynamic)
 			return;
-		if(data != null) {
+		if(data != null)
 			land(data.separation.x, data.separation.y, data.shape2.rotation);
-		}
 	}
 
 	private var _type          : BodyType;
