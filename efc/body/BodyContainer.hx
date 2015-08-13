@@ -1,4 +1,4 @@
-package;
+package efc.body;
 
 import flambe.Component;
 import differ.data.ShapeCollision;

@@ -1,4 +1,4 @@
-package;
+package efc.controller;
 
 import flambe.Entity;
 import flambe.System;
@@ -27,18 +27,14 @@ class Controller extends Component
 		var v = velocity();
 		if(_isLeft && fnLeft != null) 
 			fnLeft(v);
-		else if(_isRight && fnRight != null)
+		if(_isRight && fnRight != null)
 			fnRight(v);
-		else if(_isUp && fnUp != null)
+		if(_isUp && fnUp != null)
 			fnUp(v);
-		else if(_isDown && fnDown != null)
+		if(_isDown && fnDown != null)
 			fnDown(v);
-		else if(_isSpace && fnSpace != null)
+		if(_isSpace && fnSpace != null)
 			fnSpace(v);
-		else {
-			_speed = _min;
-			return;
-		}
 
 		_speed += 0.05;
 	}
@@ -51,31 +47,30 @@ class Controller extends Component
 	private function init() : Void
 	{
 		_speed = _min;
-		var d : Disposer;
 		_container = new Entity()
-			.add(d = new Disposer());
+			.add(new Disposer());
 
 		_container.get(Disposer).connect1(System.keyboard.down, onKeyDown);
 		_container.get(Disposer).connect1(System.keyboard.up, onKeyUp);
 	}
 
-	private function onKeyDown(e :KeyboardEvent) : Void
+	private inline function onKeyDown(e :KeyboardEvent) : Void
 	{
 		switch (e.key) {
-			case A: _isLeft = true; _isRight = false; _isUp = false; _isDown = false; _isSpace = false; _speed = _min; //left
-			case D: _isLeft = false; _isRight = true; _isUp = false; _isDown = false; _isSpace = false; _speed = _min; //right
-			case W: _isLeft = false; _isRight = false; _isUp = true; _isDown = false; _isSpace = false; //up
+			case A: _isLeft = true; _isRight = false; _isDown = false; _isSpace = false; _speed = _min; //left
+			case D: _isLeft = false; _isRight = true; _isDown = false; _isSpace = false; _speed = _min; //right
+			case W: _isUp = true; _isDown = false; _isSpace = false; //up
 			case S: _isLeft = false; _isRight = false; _isUp = false; _isDown = true; _isSpace = false; //down
 			case Space: _isLeft = false; _isRight = false; _isUp = false; _isDown = false; _isSpace = true; //action
 			default:
 		}
 	}
 
-	private function onKeyUp(e :KeyboardEvent) : Void
+	private inline function onKeyUp(e :KeyboardEvent) : Void
 	{
 		switch (e.key) {
-			case A: _isLeft  = false;
-			case D: _isRight = false;
+			case A: _isLeft  = false; _speed = _min;
+			case D: _isRight = false; _speed = _min;
 			case W: _isUp    = false;
 			case S: _isDown  = false;
 			case Space: _isSpace = false;
