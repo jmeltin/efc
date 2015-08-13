@@ -3,7 +3,9 @@ package efc.body;
 import flambe.System;
 import flambe.Component;
 import flambe.display.Sprite;
+import flambe.animation.Ease;
 import flambe.util.Assert;
+import flambe.math.FMath;
 
 import differ.shapes.Polygon;
 import differ.data.ShapeCollision;
@@ -21,8 +23,11 @@ class Body extends Component
 
 	override public function onUpdate(dt :Float) : Void
 	{
-		shape.x = _sprite.getViewMatrix().m02;
-		shape.y = _sprite.getViewMatrix().m12;
+		var matrix = _sprite.getViewMatrix();
+		var rotation = FMath.toDegrees(Math.atan2(-matrix.m01, matrix.m00));
+		shape.rotation = rotation;
+		shape.x = matrix.m02;
+		shape.y = matrix.m12;
 		if(_type == Dynamic)
 			_bodyContainer.test(this, handleCollision);
 	}
@@ -51,10 +56,12 @@ class Body extends Component
 		owner.get(Gravity).isOn = true;
 	}
 
-	public function land(overlap :Float) : Void
+	public function land(overlapX :Float, overlapY :Float, rotation :Float) : Void
 	{
 		owner.get(Gravity).clear();
-		owner.get(Sprite).y._ += overlap;
+		owner.get(Sprite).y._ += overlapY;
+		owner.get(Sprite).x._ += overlapX + FMath.toRadians(rotation);
+		owner.get(Sprite).rotation.animateTo(rotation, 0.05);
 		if(fnLand != null)
 			fnLand();
 	}
@@ -63,8 +70,9 @@ class Body extends Component
 	{
 		if(_type != Dynamic)
 			return;
-		if(data != null)
-			land(data.overlap);
+		if(data != null) {
+			land(data.separation.x, data.separation.y, data.shape2.rotation);
+		}
 	}
 
 	private var _type          : BodyType;
