@@ -17,7 +17,9 @@ class Body extends Component
 
 	public function new(type :BodyType) : Void
 	{
-		Assert.that((_bodyContainer = System.root.get(BodyContainer)) != null, "BodyContainer not found in root. :Body.hx -> createPlatform()");
+		_bodyContainer = System.root.get(BodyContainer);
+		if(_bodyContainer == null)
+			System.root.add(_bodyContainer = new BodyContainer());
 		_type = type;
 	}
 
@@ -28,8 +30,11 @@ class Body extends Component
 		shape.rotation = rotation;
 		shape.x = matrix.m02;
 		shape.y = matrix.m12;
-		if(_type == Dynamic)
+		if(_type == Dynamic) {
 			_bodyContainer.test(this, handleCollision);
+			if(!_gravIsOn)
+				_sprite.rotation.animateTo(0, 0.33333, Ease.expoOut);
+		}
 	}
 
 	override public function onStart() : Void
@@ -48,20 +53,20 @@ class Body extends Component
 
 	public function gravityOff() : Void
 	{
-		owner.get(Gravity).isOn = false;
+		owner.get(Gravity).isOn = _gravIsOn = false;
 	}
 
 	public function gravityOn() : Void
 	{
-		owner.get(Gravity).isOn = true;
+		owner.get(Gravity).isOn = _gravIsOn = true;
 	}
 
 	public function land(overlapX :Float, overlapY :Float, rotation :Float) : Void
 	{
 		owner.get(Gravity).clear();
-		owner.get(Sprite).y._ += overlapY;
-		owner.get(Sprite).x._ += overlapX;
-		owner.get(Sprite).rotation.animateTo(rotation, 0.05);
+		_sprite.y._ += overlapY;
+		_sprite.x._ += overlapX;
+		_sprite.rotation.animateTo(rotation, 0.05);
 		if(fnLand != null)
 			fnLand();
 	}
@@ -74,6 +79,7 @@ class Body extends Component
 			land(data.separation.x, data.separation.y, data.shape2.rotation);
 	}
 
+	private var _gravIsOn   : Bool = true;
 	private var _type          : BodyType;
 	private var _bodyContainer : BodyContainer;
 	private var _sprite        : Sprite;
