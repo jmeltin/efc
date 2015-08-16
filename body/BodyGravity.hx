@@ -4,7 +4,7 @@ import flambe.Entity;
 import flambe.Component;
 import flambe.display.Sprite;
 
-class Gravity extends Component
+class BodyGravity extends Component
 {
 	public var isOn : Bool = true;
 
@@ -23,7 +23,7 @@ class Gravity extends Component
 	override public function onStart() : Void
 	{
 		_sprite = owner.get(Sprite);
-		_min = 0.5;
+		_min = 0.9;
 		_max = 4;
 		_delta = _min;
 	}

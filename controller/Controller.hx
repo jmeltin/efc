@@ -31,10 +31,6 @@ class Controller extends Component
 			fnRight(v);
 		if(_isUp && fnUp != null)
 			fnUp(v);
-		if(_isDown && fnDown != null)
-			fnDown(v);
-		if(_isSpace && fnSpace != null)
-			fnSpace(v);
 
 		_speed += 0.05;
 	}
@@ -57,11 +53,9 @@ class Controller extends Component
 	private inline function onKeyDown(e :KeyboardEvent) : Void
 	{
 		switch (e.key) {
-			case A: _isLeft = true; _isRight = false; _isDown = false; _isSpace = false; _speed = _min; //left
-			case D: _isLeft = false; _isRight = true; _isDown = false; _isSpace = false; _speed = _min; //right
+			case A: _isLeft = true; _isRight = false; _isDown = false; _isSpace = false;
+			case D: _isLeft = false; _isRight = true; _isDown = false; _isSpace = false;
 			case W: _isUp = true; _isDown = false; _isSpace = false; //up
-			case S: _isLeft = false; _isRight = false; _isUp = false; _isDown = true; _isSpace = false; //down
-			case Space: _isLeft = false; _isRight = false; _isUp = false; _isDown = false; _isSpace = true; //action
 			default:
 		}
 	}
@@ -69,11 +63,9 @@ class Controller extends Component
 	private inline function onKeyUp(e :KeyboardEvent) : Void
 	{
 		switch (e.key) {
-			case A: _isLeft  = false; _speed = _min;
-			case D: _isRight = false; _speed = _min;
+			case A: _isLeft  = false;
+			case D: _isRight = false;
 			case W: _isUp    = false;
-			case S: _isDown  = false;
-			case Space: _isSpace = false;
 			default:
 		}
 	}

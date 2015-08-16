@@ -3,6 +3,7 @@ package efc.body;
 import flambe.System;
 import flambe.Component;
 import flambe.display.Sprite;
+import flambe.display.ImageSprite;
 import flambe.animation.Ease;
 import flambe.util.Assert;
 import flambe.math.FMath;
@@ -39,10 +40,16 @@ class Body extends Component
 
 	override public function onStart() : Void
 	{
-		owner.add(new Gravity(_type));
-		_sprite = owner.getFromChildren(Sprite);
+		owner.add(new BodyGravity(_type));
+		var spr :ImageSprite;
+		spr = cast owner.getFromChildren(Sprite);
 
-		shape = Polygon.rectangle(_sprite.getViewMatrix().m02, _sprite.getViewMatrix().m12, _sprite.getNaturalWidth(), _sprite.getNaturalHeight(), false);
+		if(spr.texture == null)
+			shape = Polygon.rectangle(spr.getViewMatrix().m02, spr.getViewMatrix().m12, spr.getNaturalWidth(), spr.getNaturalHeight(), false);
+		else
+			shape = new Polygon(0, 0, BodyTracer.traceTexture(spr.texture, 0));
+
+		_sprite = spr;
 	}
 
 	public function toSpace() : Body
@@ -53,17 +60,17 @@ class Body extends Component
 
 	public function gravityOff() : Void
 	{
-		owner.get(Gravity).isOn = _gravIsOn = false;
+		owner.get(BodyGravity).isOn = _gravIsOn = false;
 	}
 
 	public function gravityOn() : Void
 	{
-		owner.get(Gravity).isOn = _gravIsOn = true;
+		owner.get(BodyGravity).isOn = _gravIsOn = true;
 	}
 
 	public function land(overlapX :Float, overlapY :Float, rotation :Float) : Void
 	{
-		owner.get(Gravity).clear();
+		owner.get(BodyGravity).clear();
 		_sprite.y._ += overlapY;
 		_sprite.x._ += overlapX;
 		_sprite.rotation.animateTo(rotation, 0.05);
@@ -79,7 +86,7 @@ class Body extends Component
 			land(data.separation.x, data.separation.y, data.shape2.rotation);
 	}
 
-	private var _gravIsOn   : Bool = true;
+	private var _gravIsOn      : Bool = true;
 	private var _type          : BodyType;
 	private var _bodyContainer : BodyContainer;
 	private var _sprite        : Sprite;
