@@ -1,27 +1,39 @@
 package efc.body;
 
+import flambe.System;
 import flambe.Component;
-import differ.data.ShapeCollision;
+import flambe.display.Sprite;
+import flambe.display.ImageSprite;
+import flambe.animation.Ease;
+import flambe.util.Assert;
+import flambe.math.FMath;
+
+import nape.space.Space;
+import nape.geom.Vec2;
 
 class BodyContainer extends Component
 {
 	public function new() : Void
 	{
-		_bodies = new Array<Body>();
+		_space = new Space(new Vec2(0, 900));
 	}
 
-	public function addBody(body :Body) : Void
+	override public function onStart() : Void
 	{
-		_bodies.push(body);
+		#if flash
+			owner.add(new Debug(_space));
+		#end
 	}
 
-	public function test(body :Body, fn :ShapeCollision -> Void) : Void
+	override public function onUpdate (dt :Float) : Void
 	{
-		for(b in _bodies) {
-			if(b != body)
-				fn(body.shape.test(b.shape));
-		}
+		_space.step(dt);
 	}
 
-	private var _bodies    : Array<Body>;
+	public function addBody(body :nape.phys.Body) : Void
+	{
+		body.space = _space;
+	}
+
+	private var _space :Space;
 }

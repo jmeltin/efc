@@ -8,85 +8,54 @@ import flambe.animation.Ease;
 import flambe.util.Assert;
 import flambe.math.FMath;
 
-import differ.shapes.Polygon;
-import differ.data.ShapeCollision;
+import nape.shape.Polygon;
+import nape.shape.Shape;
+import nape.phys.BodyType;
+import nape.geom.GeomPoly;
+import nape.geom.Vec2;
 
 class Body extends Component
 {
-	public var shape (default, null): differ.shapes.Shape;
-	public var fnLand (null, default): Void -> Void;
+	public var body (default, null): nape.phys.Body;
 
-	public function new(type :BodyType) : Void
+	public function new(?type :BodyType) : Void
 	{
 		_bodyContainer = System.root.get(BodyContainer);
-		if(_bodyContainer == null)
-			System.root.add(_bodyContainer = new BodyContainer());
-		_type = type;
+		body = new nape.phys.Body();
+		if(type != null)
+			body.type = type;
 	}
 
-	override public function onUpdate(dt :Float) : Void
+	override public function onUpdate(dt) : Void
 	{
-		var matrix = _sprite.getViewMatrix();
-		var rotation = FMath.toDegrees(Math.atan2(-matrix.m01, matrix.m00));
-		shape.rotation = rotation;
-		shape.x = matrix.m02;
-		shape.y = matrix.m12;
-		if(_type == Dynamic) {
-			_bodyContainer.test(this, handleCollision);
-			if(!_gravIsOn)
-				_sprite.rotation.animateTo(0, 0.33333, Ease.expoOut);
+		if(body.type != BodyType.STATIC) {
+			// _sprite.centerAnchor();
+			_sprite.x._ = body.position.x;
+			_sprite.y._ = body.position.y;
+			_sprite.rotation._ = FMath.toDegrees(body.rotation);
 		}
 	}
 
 	override public function onStart() : Void
 	{
-		owner.add(new BodyGravity(_type));
 		var spr :ImageSprite;
-		spr = cast owner.getFromChildren(Sprite);
+		spr = cast owner.get(Sprite);
 
-		if(spr.texture == null)
-			shape = Polygon.rectangle(spr.getViewMatrix().m02, spr.getViewMatrix().m12, spr.getNaturalWidth(), spr.getNaturalHeight(), false);
-		else
-			shape = new Polygon(0, 0, BodyTracer.traceTexture(spr.texture, 0));
+		var poly :GeomPoly = new GeomPoly(BodyTracer.traceTexture(spr.texture, 0));
+		var convexList = poly.convexDecomposition();
+		for(geomPoly in convexList) {
+			body.shapes.add(new Polygon(geomPoly));
+		}
+		// body.align();
+		var matrix = spr.getViewMatrix();
+		var rotation = Math.atan2(-matrix.m01, matrix.m00);
+		body.position = Vec2.weak(matrix.m02, matrix.m12);
+		body.rotation = rotation;
 
+		_bodyContainer.addBody(body);
 		_sprite = spr;
 	}
 
-	public function toSpace() : Body
-	{
-		_bodyContainer.addBody(this);
-		return this;
-	}
-
-	public function gravityOff() : Void
-	{
-		owner.get(BodyGravity).isOn = _gravIsOn = false;
-	}
-
-	public function gravityOn() : Void
-	{
-		owner.get(BodyGravity).isOn = _gravIsOn = true;
-	}
-
-	public function land(overlapX :Float, overlapY :Float, rotation :Float) : Void
-	{
-		owner.get(BodyGravity).clear();
-		_sprite.y._ += overlapY;
-		_sprite.x._ += overlapX;
-		_sprite.rotation.animateTo(rotation, 0.05);
-		if(fnLand != null)
-			fnLand();
-	}
-
-	private function handleCollision(data :ShapeCollision) : Void
-	{
-		if(_type != Dynamic)
-			return;
-		if(data != null)
-			land(data.separation.x, data.separation.y, data.shape2.rotation);
-	}
-
-	private var _gravIsOn      : Bool = true;
 	private var _type          : BodyType;
 	private var _bodyContainer : BodyContainer;
 	private var _sprite        : Sprite;
