@@ -3,9 +3,7 @@ package efc.body;
 import flambe.Component;
 import flambe.display.Texture;
 import flambe.util.Assert;
-
 import haxe.io.Bytes;
-
 import nape.geom.Vec2;
 
 class BodyTracer extends Component
@@ -49,6 +47,7 @@ class BodyTracer extends Component
 
 	private static function getSquareValue(p :Vec2, tolerance :Int, arra :Array<Array<Int>>) :Int
 	{
+		Assert.that(tolerance > -1, "Tolerance must be positive. :BodyTracer.hx getSquareValue()");
 		var squareValue :Int = 0;
 		var x = cast p.x;
 		var y = cast p.y;
@@ -95,6 +94,8 @@ class BodyTracer extends Component
 			if (walkerV.x == startV.x && walkerV.y == startV.y)
 				closedLoop=true;
 		}
+
+		startV.dispose();
 		return contourVector;
 	}
 
@@ -145,7 +146,6 @@ enum Direction {
 	LEFT;
 	RIGHT;
 }
-
 
 
 
