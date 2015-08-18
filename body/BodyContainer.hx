@@ -15,7 +15,7 @@ class BodyContainer extends Component
 {
 	public function new() : Void
 	{
-		_space = new Space(new Vec2(0, 900));
+		_space = new Space(new Vec2(0, 1300));
 	}
 
 	override public function onStart() : Void

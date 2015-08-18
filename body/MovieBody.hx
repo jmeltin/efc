@@ -24,6 +24,13 @@ class MovieBody extends Component
 		body = new nape.phys.Body(KINEMATIC);
 	}
 
+	override public function onUpdate(dt :Float) : Void
+	{
+		var matrix = _sprite.getLocalMatrix();
+		var rotation = Math.atan2(-matrix.m01, matrix.m00);
+		body.position = Vec2.weak(matrix.m02 + _offsetX, matrix.m12 + _offsetY);
+	}
+
 	override public function onStart() : Void
 	{
 		_sprite = owner.get(ImageSprite);
@@ -31,14 +38,17 @@ class MovieBody extends Component
 		var convexList = poly.convexDecomposition();
 		for(geomPoly in convexList)
 			body.shapes.add(new Polygon(geomPoly));
-		var matrix = _sprite.getViewMatrix();
-		var rotation = Math.atan2(-matrix.m01, matrix.m00);
-		body.position = Vec2.weak(matrix.m02, matrix.m12);
-		body.rotation = rotation;
+		var vMatrix = _sprite.getViewMatrix();
+		var lMatrix = _sprite.getLocalMatrix();
+
+		_offsetX = vMatrix.m02 - lMatrix.m02;
+		_offsetY = vMatrix.m12 - lMatrix.m12;
 
 		_bodyContainer.addBody(body);
 	}
 
+	private var _offsetX       : Float;
+	private var _offsetY       : Float;
 	private var _bodyContainer : BodyContainer;
 	private var _sprite        : ImageSprite;
 }
