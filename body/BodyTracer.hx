@@ -4,6 +4,7 @@ import flambe.Component;
 import flambe.display.Texture;
 import flambe.util.Assert;
 import haxe.io.Bytes;
+import haxe.ds.Vector;
 import nape.geom.Vec2;
 
 class BodyTracer extends Component
@@ -11,32 +12,15 @@ class BodyTracer extends Component
 	public static function traceTexture(texture :Texture, tolerance :Int) :Array<Vec2> 
 	{
 		var data :Bytes = texture.readPixels(0, 0, texture.width, texture.height);
-
-		var arra = populateArray(data, texture.width, texture.height);
-		var startPoint = getStartingPixel(tolerance, arra, texture.width, texture.height);
-		return marchingSquares(startPoint, arra, tolerance, texture.width, texture.height);
+		var startPoint = getStartingPixel(data, tolerance, texture.width, texture.height);
+		return marchingSquares(data, startPoint, tolerance, texture.width);
 	}
 
-	private static function populateArray(data :Bytes, width :Int, height :Int) :Array<Array<Int>>
-	{
-		var val :Int;
-		var alphaData = [for (i in 0...width) [for (i in 0...height) 0]];
-
-		for(i in 0...data.length) {
-			if((val = data.get(i)) != 0 && (i+1)%4 == 0) {
-				var row = Math.floor(Math.floor(i/4)/width);
-				var column = Math.floor(i/4)%width;
-				alphaData[row][column] = val;
-			}
-		}
-		return alphaData;
-	}
-
-	private static function getStartingPixel(tolerance :Int, arra :Array<Array<Int>>, width: Int, height :Int) :Vec2 
+	private static function getStartingPixel(data :Bytes, tolerance :Int, width: Int, height :Int) :Vec2 
 	{
 		for (x in 0...width) {
 			for (y in 0...height) {
-				if(arra[x][y] > tolerance)
+				if(dataValue(data, x, y, width) > tolerance)
 					return new Vec2(x, y);
 			}
 		}
@@ -45,26 +29,26 @@ class BodyTracer extends Component
 		return null;
 	}
 
-	private static function getSquareValue(p :Vec2, tolerance :Int, arra :Array<Array<Int>>) :Int
+	private static function getSquareValue(data :Bytes, v :Vec2, tolerance :Int, width :Int) :Int
 	{
 		Assert.that(tolerance > -1, "Tolerance must be positive. :BodyTracer.hx getSquareValue()");
 		var squareValue :Int = 0;
-		var x = cast p.x;
-		var y = cast p.y;
+		var x = cast v.x;
+		var y = cast v.y;
 
-		if(x!=0 && y!=0 && arra[x-1][y-1] > tolerance)
+		if((x!=0 && y!=0) && dataValue(data, x-1, y-1, width) > tolerance)
 			squareValue |=1;
-		if(y!=0 && arra[x][y-1] > tolerance)
+		if(y!=0 && dataValue(data, x, y-1, width) > tolerance)
 			squareValue |=2;
-		if(x!=0 && arra[x-1][y] > tolerance)
+		if(x!=0 && dataValue(data, x-1, y, width) > tolerance)
 			squareValue |=4;
-		if(arra[x][y] > tolerance)
+		if(dataValue(data, x, y, width) > tolerance)
 			squareValue |=8;
 
 		return squareValue;
 	}
 
-	private static function marchingSquares(startV :Vec2, arra :Array<Array<Int>>, tolerance :Int, width :Int, height :Int) :Array<Vec2> 
+	private static function marchingSquares(data :Bytes, startV :Vec2, tolerance :Int, width :Int) :Array<Vec2> 
 	{
 		var contourVector :Array<Vec2> = new Array<Vec2>();
 		var walkerV = new Vec2(startV.x, startV.y);
@@ -73,7 +57,7 @@ class BodyTracer extends Component
 		var closedLoop :Bool = false;
 
 		while (!closedLoop) {
-			var squareValue :Int = getSquareValue(walkerV, tolerance, arra);
+			var squareValue :Int = getSquareValue(data, walkerV, tolerance, width);
 			switch (squareValue) {
 				case 1: prevDirection = stepUp(walkerV);
 				case 2: prevDirection = stepRight(walkerV);
@@ -90,7 +74,7 @@ class BodyTracer extends Component
 				case 13: prevDirection = stepUp(walkerV);
 				case 14: prevDirection = stepLeft(walkerV);
 			}
-			contourVector.push(new Vec2(walkerV.y, walkerV.x));
+			contourVector.push(new Vec2(walkerV.x, walkerV.y));
 			if (walkerV.x == startV.x && walkerV.y == startV.y)
 				closedLoop=true;
 		}
@@ -138,6 +122,11 @@ class BodyTracer extends Component
 		}
 		return stepDown(v);
 	}
+
+	private static function dataValue(data :Bytes, x :Int, y :Int, width :Int) :Int
+	{
+		return data.get((width * y + x + 3)*4);
+	}
 }
 
 enum Direction {
@@ -146,6 +135,5 @@ enum Direction {
 	LEFT;
 	RIGHT;
 }
-
 
 
